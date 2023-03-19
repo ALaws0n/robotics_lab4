@@ -25,10 +25,14 @@ def process_image(image):
 	# Define HSV bounds
 	lower_yellow_hsv = np.array([22,1,1])
 	upper_yellow_hsv = np.array([60,255,255])
-	# Mask the image by our defined bounds
+	# Mask the image by our defined HSV bounds
 	yellow_mask = cv2.inRange(hsv, lower_yellow_hsv, upper_yellow_hsv)
+	# Remove background noise
+	empty_array = np.zeros((720, 1280), dtype = "uint8")
+	rectangle_image = cv2.rectangle(empty_array, (500,100), (900,600), (255,255,255), -1)
+	masked_image = cv2.bitwise_and(yellow_mask, rectangle_image)
 	# Return the masked image
-	return yellow_mask
+	return masked_image
 	
 if __name__ == '__main__':
 	# Initialize the ball detection node
@@ -45,6 +49,8 @@ if __name__ == '__main__':
 		if img_received:
 			#make a call out to our image processing function
 			new_image = process_image(rgb_img)
+			#Remove background noise
+			
 			#convert the image back to rosmsg and publish it
 			img_msg = CvBridge().cv2_to_imgmsg(new_image, encoding="mono8")
 			img_pub.publish(img_msg)
